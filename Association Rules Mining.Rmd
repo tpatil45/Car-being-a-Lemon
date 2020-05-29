@@ -1,0 +1,50 @@
+---
+title: "Project Association Rules Mining"
+author: "IST 707 - Group 5"
+date: "2020 M04 16"
+output: html_document
+---
+
+#Importing the libraries
+```{r}
+library(arules)
+library(arulesViz)
+```
+
+#Importing the csv data and matrix data
+```{r}
+rules_mat <- readRDS(file = "rules_mat.Rda")
+#rules_df <- read.csv("rules_df.csv", stringsAsFactors = T)
+```
+
+#Rules for Bad Buys
+```{r}
+rules_Bad_Buy <- apriori(rules_mat, 
+                    parameter=list(support=0.01,confidence=0.85, minlen = 4),
+                   appearance = list(default="lhs", rhs=("IsBadBuy=1")))
+
+plot(rules_Bad_Buy)
+plot(rules_Bad_Buy, method = "paracoord", control = list(reorder = TRUE))
+```
+
+#Display best lift - five rules
+```{r}
+rules_BB_sorted <- sort(rules_Bad_Buy, by="lift")
+inspectDT(head(rules_BB_sorted, 5))
+```
+
+#Rules for Good Buys
+```{r}
+rules_Good_Buy <- apriori(rules_mat, 
+                    parameter=list(support=0.3,confidence=0.85, minlen = 4),
+                   appearance = list(default="lhs", rhs=("IsBadBuy=0")))
+
+plot(rules_Good_Buy)
+plot(rules_Good_Buy, method = "paracoord", control = list(reorder = TRUE))
+```
+
+#Display best lift - five rules
+```{r}
+rules_GB_sorted <- sort(rules_Good_Buy, by="lift")
+inspectDT(head(rules_GB_sorted, 5))
+```

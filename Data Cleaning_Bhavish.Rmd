@@ -1,0 +1,638 @@
+
+# IST 707 DATA ANALYTICS PROJECT- CODE CLEANING
+
+### Uploading Dataset
+#### Reading the Training data csv and storing it into a dataframe
+```{r}
+setwd("C:/Users/bhavi/OneDrive/Desktop/SYR ADS/Sem 2/IST_707_Data_Analytics/Project/DontGetKicked")
+
+getwd
+
+first_read_car_buy_df <- read.csv("training.csv")
+```
+
+
+```{r}
+str(first_read_car_buy_df)
+summary(first_read_car_buy_df)
+```
+
+#### REPLACING string NULL with NAs
+```{r}
+for (i in 1:length(first_read_car_buy_df)){
+  for (j in 1:nrow(first_read_car_buy_df)){
+    if(first_read_car_buy_df[j, i] == "NULL"){
+      first_read_car_buy_df[j, i] <- NA
+    }
+  }
+}
+```
+
+
+#### Identifying number of NAs in DATAFRAME
+```{r}
+sum(is.na(first_read_car_buy_df))
+```
+
+### 1. THE TRIM COLUMN has 2360 blanks which needs to be imputed
+```{r}
+length(first_read_car_buy_df$Trim[first_read_car_buy_df$Trim == "" | is.na(first_read_car_buy_df$Trim) | first_read_car_buy_df$Trim == "NULL"])
+```
+
+#### REPLACE MISSING VALUES WITH MODE AT MAKE MODEL level
+```{r}
+## FUNCTION TO OBTAIN MODE of a VECTOR
+  getmode <- function(x) {
+  ux <- na.omit(unique(x) )
+ tab <- tabulate(match(x, ux)); 
+ ux[tab == max(tab)]
+ ux[1]
+}
+```
+
+
+```{r}
+#library(tidyverse)
+#mode_trim_make_model <- first_read_car_buy_df %>%
+#      group_by(Make,Model)%>%
+#      summarise(getmode(Trim))
+#colnames(mode_trim_make_model) <- c('make','model','mode')
+```
+
+```{r}
+#indexOfNA <- which(first_read_car_buy_df$Trim == "")
+#for (i in indexOfNA) {
+#      first_read_car_buy_df$Trim[i] <- mode_trim_make_model[mode_trim_make_model$make == first_read_car_buy_df[i,"make"] & mode_trim_make_model$model == #first_read_car_buy_df[i,"model"],3]
+#    }
+
+first_read_car_buy_df$Trim[first_read_car_buy_df$Trim == ""| is.na(first_read_car_buy_df$Trim)] <- getmode(first_read_car_buy_df$Trim)
+
+```
+
+#### 0 blank values after replacing with Mode
+```{r}
+length(first_read_car_buy_df$Trim[first_read_car_buy_df$Trim == ""|is.na(first_read_car_buy_df$Trim)])
+```
+
+### 2. The Submodel column has 8 NULL or Blank values, which can be replaced with the mode of the value
+```{r}
+length(first_read_car_buy_df$SubModel[first_read_car_buy_df$SubModel == ""|is.na(first_read_car_buy_df$SubModel)])
+```
+
+```{r}
+first_read_car_buy_df$SubModel[first_read_car_buy_df$SubModel == ""|is.na(first_read_car_buy_df$SubModel)] <- getmode(first_read_car_buy_df$SubModel)
+```
+
+#### 0 NULL or Blanks after replacing with mode
+```{r}
+length(first_read_car_buy_df$SubModel[first_read_car_buy_df$SubModel == ""|is.na(first_read_car_buy_df$SubModel)])
+```
+
+
+### 3. The Color column has 8 NULL or Blank values, which can be replaced with the mode of the value
+```{r}
+length(first_read_car_buy_df$Color[first_read_car_buy_df$Color == ""|is.na(first_read_car_buy_df$Color)])
+```
+
+```{r}
+first_read_car_buy_df$Color[first_read_car_buy_df$Color == ""|is.na(first_read_car_buy_df$Color)] <- getmode(first_read_car_buy_df$Color)
+```
+
+#### 0 NULL or Blanks after replacing with mode
+```{r}
+length(first_read_car_buy_df$Color[first_read_car_buy_df$Color == ""|is.na(first_read_car_buy_df$Color)])
+```
+
+
+### 4. The Transmission column has 9 NULL or Blank values, which can be replaced with the mode of the value
+```{r}
+length(first_read_car_buy_df$Transmission[first_read_car_buy_df$Transmission == ""|is.na(first_read_car_buy_df$Transmission)])
+```
+
+```{r}
+first_read_car_buy_df$Transmission[is.na(first_read_car_buy_df$Transmission) | first_read_car_buy_df$Transmission == "<NA>"] <-getmode(first_read_car_buy_df$Transmission)
+```
+
+
+#### 0 NULL or Blanks after replacing with mode
+```{r}
+length(first_read_car_buy_df$Transmission[first_read_car_buy_df$Transmission == ""| is.na(first_read_car_buy_df$Transmission)])
+summary(first_read_car_buy_df$Transmission)
+```
+
+**Replacing Lower case Manual with MANUAL**
+```{r}
+first_read_car_buy_df$Transmission[first_read_car_buy_df$Transmission == "Manual"] <-"MANUAL"
+```
+
+
+### 5. The WheelType column has 3174 NULL or Blank values, which can be replaced with the mode of the value
+```{r}
+length(first_read_car_buy_df$WheelType[first_read_car_buy_df$WheelType == ""| is.na(first_read_car_buy_df$WheelType)])
+```
+
+```{r}
+other_wheel_type <- c("OTHER")
+#other_wheel_type <- as.factor(other_wheel_type)
+mode(other_wheel_type)
+first_read_car_buy_df$WheelType<-as.character(first_read_car_buy_df$WheelType)
+```
+
+```{r}
+first_read_car_buy_df$WheelType[first_read_car_buy_df$WheelType == ""|is.na(first_read_car_buy_df$WheelType)] <-other_wheel_type
+```
+
+
+#### 0 NULL or Blanks after replacing with mode
+```{r}
+first_read_car_buy_df$WheelType<-as.factor(first_read_car_buy_df$WheelType)
+length(first_read_car_buy_df$WheelType[first_read_car_buy_df$WheelType == ""|is.na(first_read_car_buy_df$WheelType)])
+summary(first_read_car_buy_df$WheelType)
+```
+
+### 6. The Nationality column has 5 NULL or Blank values, which can be replaced with the mode of the value
+```{r}
+length(first_read_car_buy_df$Nationality[first_read_car_buy_df$Nationality == ""| is.na(first_read_car_buy_df$Nationality)])
+```
+
+
+```{r}
+first_read_car_buy_df$Nationality[is.na(first_read_car_buy_df$Nationality)] <-getmode(first_read_car_buy_df$Nationality)
+```
+
+
+#### 0 NULL or Blanks after replacing with mode
+```{r}
+length(first_read_car_buy_df$Nationality[first_read_car_buy_df$Nationality == ""| is.na(first_read_car_buy_df$Nationality)])
+summary(first_read_car_buy_df$Nationality)
+```
+
+
+### 7. The Size column has 5 NULL or Blank values, which can be replaced with the mode of the value
+```{r}
+length(first_read_car_buy_df$Size[first_read_car_buy_df$Size == ""| is.na(first_read_car_buy_df$Size)])
+```
+
+```{r}
+first_read_car_buy_df$Size[is.na(first_read_car_buy_df$Size)] <-getmode(first_read_car_buy_df$Size)
+```
+
+#### 0 NULL or Blanks after replacing with mode
+```{r}
+length(first_read_car_buy_df$Size[first_read_car_buy_df$Size == ""| is.na(first_read_car_buy_df$Size)])
+summary(first_read_car_buy_df$Size)
+```
+
+
+### 8. TopThreeAmericanName has 5 NULLS, replaced with mode
+```{r}
+length(first_read_car_buy_df$TopThreeAmericanName[first_read_car_buy_df$TopThreeAmericanName == ""| is.na(first_read_car_buy_df$TopThreeAmericanName)])
+```
+
+```{r}
+first_read_car_buy_df$TopThreeAmericanName[is.na(first_read_car_buy_df$TopThreeAmericanName)|first_read_car_buy_df$TopThreeAmericanName == ""| first_read_car_buy_df$TopThreeAmericanName == "NULL"] <-getmode(first_read_car_buy_df$TopThreeAmericanName)
+```
+
+#### 0 NULL or Blanks after replacing with mode
+```{r}
+length(first_read_car_buy_df$TopThreeAmericanName[is.na(first_read_car_buy_df$TopThreeAmericanName)|first_read_car_buy_df$TopThreeAmericanName == ""| first_read_car_buy_df$TopThreeAmericanName == "NULL"])
+#summary(first_read_car_buy_df$TopThreeAmericanName)
+```
+
+
+### 9. PRIMEUNIT has 69564 NULLS hence deleting these columns
+```{r}
+length(first_read_car_buy_df$PRIMEUNIT[first_read_car_buy_df$PRIMEUNIT == ""| is.na(first_read_car_buy_df$PRIMEUNIT)])
+```
+
+
+### 9. AUCGUART has 69564 NULLS hence deleting these columns
+```{r}
+length(first_read_car_buy_df$AUCGUART[is.na(first_read_car_buy_df$AUCGUART)|first_read_car_buy_df$AUCGUART == ""| first_read_car_buy_df$AUCGUART == "NULL"])
+```
+
+
+
+### 10. Checking structure of VNZIP1
+```{r}
+str(first_read_car_buy_df$VNZIP1)
+str(first_read_car_buy_df$VNST)
+```
+
+### REMOVING UNIMPORTANT COLUMNS
+```{r}
+first_read_car_buy_df$WheelTypeID <- NULL
+first_read_car_buy_df$VehYear <- NULL
+first_read_car_buy_df$PurchDate <- NULL
+first_read_car_buy_df$PRIMEUNIT <- NULL
+first_read_car_buy_df$AUCGUART <- NULL
+first_read_car_buy_df$BYRNO <- NULL
+first_read_car_buy_df$RefId <- NULL
+first_read_car_buy_df$VNZIP1 <- NULL
+```
+
+##### Checking DATAtypes to convert to required datatype if incorrect
+```{r}
+str(first_read_car_buy_df)
+```
+
+#### Converting all categorical variables to Factor datatype and Numerical Variables to numeric
+```{r}
+cat_var <- c('IsBadBuy', 'Auction', 'Make', 'Model', 'Trim', 'SubModel', 'Color', 'Transmission', 'WheelType', 'Nationality', 'Size', 'TopThreeAmericanName', 'VNST', 'IsOnlineSale')
+
+num_var <- c('VehicleAge', 'VehOdo', 'MMRAcquisitionAuctionAveragePrice', 'MMRAcquisitionAuctionCleanPrice', 'MMRAcquisitionRetailAveragePrice', 'MMRAcquisitonRetailCleanPrice', 'MMRAcquisitonRetailCleanPrice', 'MMRCurrentAuctionAveragePrice', 'MMRCurrentAuctionCleanPrice', 'MMRCurrentRetailAveragePrice', 'MMRCurrentRetailCleanPrice', 'VehBCost', 'WarrantyCost')
+```
+
+```{r}
+for (i in 1:length(cat_var)){
+  first_read_car_buy_df[, cat_var[i]] <- as.factor(first_read_car_buy_df[, cat_var[i]])
+}
+
+for (i in 1:length(num_var)){
+  first_read_car_buy_df[, num_var[i]] <- as.numeric(first_read_car_buy_df[, num_var[i]])
+}
+```
+
+
+```{r}
+str(first_read_car_buy_df)
+```
+
+#### Creating Dataframe of 4 only numeric cols: VehicleAge, VehOdo, VehBCost & WarrantyCost
+```{r}
+num_df <- first_read_car_buy_df[,c('VehicleAge','VehOdo','VehBCost','WarrantyCost')]
+```
+
+```{r}
+#install.packages("gridExtra")
+library(gridExtra)
+```
+
+
+#### HISTOGRAM of 4 numeric columns, Vehicle Age, Vehicle Odometer, Vehicle Cost & Warranty Cost
+```{r}
+hist_plot <- function(data_in, i) {
+  data <- data.frame(x=data_in[[i]])
+  p <- ggplot(data=data, aes(data[,1])) + 
+    geom_histogram(bins = 30, col="red", aes(fill=..count..)) +
+    xlab(colnames(data_in)[i]) +
+    scale_fill_gradient("Count", low="green", high="red")
+  return (p)
+}
+mygrid2 <- list()
+for (i in 1:length(num_df)){
+  myplot2 <- hist_plot(num_df, i)
+  mygrid2 <- c(mygrid2, list(myplot2)) 
+}
+do.call("grid.arrange", c(mygrid2, ncol=2))
+```
+
+#### Creating Dataframe of all 8 auction & retail price columns
+```{r}
+num_df <- first_read_car_buy_df[,c('MMRAcquisitionAuctionAveragePrice','MMRAcquisitionAuctionCleanPrice','MMRAcquisitionRetailAveragePrice','MMRAcquisitonRetailCleanPrice','MMRCurrentAuctionAveragePrice','MMRCurrentAuctionCleanPrice','MMRCurrentRetailAveragePrice','MMRCurrentRetailCleanPrice')]
+```
+
+
+
+#### HISTOGRAM of 6 Auction & Retail Price Columns numeric columns
+*Distributions are Uniform*
+```{r}
+hist_plot <- function(data_in, i) {
+  data <- data.frame(x=data_in[[i]])
+  p <- ggplot(data=data, aes(data[,1])) + 
+    geom_histogram(bins = 30, col="red", aes(fill=..count..)) +
+    xlab(colnames(data_in)[i]) +
+    scale_fill_gradient("Count", low="green", high="red")
+  return (p)
+}
+mygrid2 <- list()
+for (i in 1:length(num_df)){
+  myplot2 <- hist_plot(num_df, i)
+  mygrid2 <- c(mygrid2, list(myplot2)) 
+}
+do.call("grid.arrange", c(mygrid2, ncol=2))
+```
+
+## Creating new Dataframe with NAs/NULLS removed
+
+```{r}
+car_buy_NA_rem_df <- first_read_car_buy_df
+```
+
+
+#### 1. There are 0 outliers in Vehicle Age column
+```{r}
+car_buy_NA_rem_df$VehicleAgeZ <- scale(car_buy_NA_rem_df$VehicleAge)
+nrow(car_buy_NA_rem_df[abs(car_buy_NA_rem_df$VehicleAgeZ)>3,])
+```
+
+#### 2. There are 194 outliers in Vehicle Odometer column which needs to be winsorized
+```{r}
+car_buy_NA_rem_df$VehOdoZ <- scale(car_buy_NA_rem_df$VehOdo)
+nrow(car_buy_NA_rem_df[abs(car_buy_NA_rem_df$VehOdoZ)>3,])
+```
+
+```{r}
+car_buy_NA_rem_df$VehOdo[car_buy_NA_rem_df$VehOdoZ<=-3]<-max(car_buy_NA_rem_df$VehOdo[car_buy_NA_rem_df$VehOdoZ<=-3])
+```
+
+#### AFTER Winsorizing vehicle odometer column
+```{r}
+summary(car_buy_NA_rem_df$VehOdo)
+```
+
+#### 3. There are 48 outliers in Vehicle Cost column
+```{r}
+car_buy_NA_rem_df$VehBCostZ <- scale(car_buy_NA_rem_df$VehBCost)
+nrow(car_buy_NA_rem_df[abs(car_buy_NA_rem_df$VehBCostZ)>3,])
+```
+
+##### Winsorizing 
+```{r}
+car_buy_NA_rem_df$VehBCost[car_buy_NA_rem_df$VehBCostZ>3]<-min(car_buy_NA_rem_df$VehBCost[car_buy_NA_rem_df$VehBCostZ>3])
+```
+
+#### AFTER Winsorizing vehicle Cost column
+```{r}
+summary(car_buy_NA_rem_df$VehBCost)
+```
+
+#### 4. There are 680 outliers in WarrantyCost column which needs to be winsorized
+```{r}
+car_buy_NA_rem_df$WarrantyCostZ <- scale(car_buy_NA_rem_df$WarrantyCost)
+nrow(car_buy_NA_rem_df[abs(car_buy_NA_rem_df$WarrantyCostZ)>3,])
+```
+
+```{r}
+summary(car_buy_NA_rem_df$WarrantyCost)
+```
+
+```{r}
+car_buy_NA_rem_df$WarrantyCost[car_buy_NA_rem_df$WarrantyCostZ>3]<-min(car_buy_NA_rem_df$WarrantyCost[car_buy_NA_rem_df$WarrantyCostZ>3])
+```
+
+#### AFTER Winsorizing WarrantyCost column
+```{r}
+summary(car_buy_NA_rem_df$WarrantyCost)
+```
+
+```{r}
+num_df <- car_buy_NA_rem_df[,c('VehicleAge','VehOdo','VehBCost','WarrantyCost')]
+```
+
+#### HISTOGRAM of 4 numeric columns (Vehicle Age, Vehicle Odometer, Vehicle Cost & Warranty Cost) after Winsorizing outliers
+*Reduced the skewness*
+```{r}
+library(ggplot2)
+hist_plot <- function(data_in, i) {
+  data <- data.frame(x=data_in[[i]])
+  p <- ggplot(data=data, aes(data[,1])) + 
+    geom_histogram(bins = 30, col="red", aes(fill=..count..)) +
+    xlab(colnames(data_in)[i]) +
+    scale_fill_gradient("Count", low="green", high="red")
+  return (p)
+}
+mygrid2 <- list()
+for (i in 1:length(num_df)){
+  myplot2 <- hist_plot(num_df, i)
+  mygrid2 <- c(mygrid2, list(myplot2)) 
+}
+do.call("grid.arrange", c(mygrid2, ncol=2))
+```
+
+```{r}
+car_buy_NA_rem_df$Transmission[car_buy_NA_rem_df$Transmission==""] <- getmode(car_buy_NA_rem_df$Transmission)
+car_buy_NA_rem_df$Transmission <- as.character(car_buy_NA_rem_df$Transmission)
+car_buy_NA_rem_df$Transmission <- as.factor(car_buy_NA_rem_df$Transmission)
+```
+
+
+```{r}
+str(car_buy_NA_rem_df)
+summary(car_buy_NA_rem_df)
+```
+
+#### 1. IMPUTING NAs for Numeric column with MEAN of the column
+```{r}
+car_buy_NA_rem_df$MMRAcquisitionAuctionAveragePrice[is.na(car_buy_NA_rem_df$MMRAcquisitionAuctionAveragePrice)] <- mean(car_buy_NA_rem_df$MMRAcquisitionAuctionAveragePrice, na.rm = TRUE)
+
+```
+
+
+```{r}
+length(car_buy_NA_rem_df$MMRAcquisitionAuctionAveragePrice[is.na(car_buy_NA_rem_df$MMRAcquisitionAuctionAveragePrice)])
+```
+
+#### 2. IMPUTING NAs for Numeric columns with MEAN of the column
+
+```{r}
+length(car_buy_NA_rem_df$MMRAcquisitionAuctionCleanPrice[is.na(car_buy_NA_rem_df$MMRAcquisitionAuctionCleanPrice)])
+```
+
+
+```{r}
+car_buy_NA_rem_df$MMRAcquisitionAuctionCleanPrice[is.na(car_buy_NA_rem_df$MMRAcquisitionAuctionCleanPrice)] <- mean(car_buy_NA_rem_df$MMRAcquisitionAuctionCleanPrice, na.rm = TRUE)
+
+```
+
+
+```{r}
+length(car_buy_NA_rem_df$MMRAcquisitionAuctionCleanPrice[is.na(car_buy_NA_rem_df$MMRAcquisitionAuctionCleanPrice)])
+```
+
+#### 3. IMPUTING NAs for Numeric columns with MEAN of the column
+
+```{r}
+length(car_buy_NA_rem_df$MMRAcquisitionRetailAveragePrice[is.na(car_buy_NA_rem_df$MMRAcquisitionRetailAveragePrice)])
+```
+
+
+```{r}
+car_buy_NA_rem_df$MMRAcquisitionRetailAveragePrice[is.na(car_buy_NA_rem_df$MMRAcquisitionRetailAveragePrice)] <- mean(car_buy_NA_rem_df$MMRAcquisitionRetailAveragePrice, na.rm = TRUE)
+
+```
+
+
+```{r}
+length(car_buy_NA_rem_df$MMRAcquisitionRetailAveragePrice[is.na(car_buy_NA_rem_df$MMRAcquisitionRetailAveragePrice)])
+```
+
+#### 4. IMPUTING NAs for Numeric columns with MEAN of the column
+
+```{r}
+length(car_buy_NA_rem_df$MMRAcquisitonRetailCleanPrice[is.na(car_buy_NA_rem_df$MMRAcquisitonRetailCleanPrice)])
+```
+
+
+```{r}
+car_buy_NA_rem_df$MMRAcquisitonRetailCleanPrice[is.na(car_buy_NA_rem_df$MMRAcquisitonRetailCleanPrice)] <- mean(car_buy_NA_rem_df$MMRAcquisitonRetailCleanPrice, na.rm = TRUE)
+
+```
+
+
+```{r}
+length(car_buy_NA_rem_df$MMRAcquisitonRetailCleanPrice[is.na(car_buy_NA_rem_df$MMRAcquisitonRetailCleanPrice)])
+```
+
+#### 5. IMPUTING NAs for Numeric columns with MEAN of the column
+
+```{r}
+length(car_buy_NA_rem_df$MMRCurrentAuctionAveragePrice[is.na(car_buy_NA_rem_df$MMRCurrentAuctionAveragePrice)])
+```
+
+
+```{r}
+car_buy_NA_rem_df$MMRCurrentAuctionAveragePrice[is.na(car_buy_NA_rem_df$MMRCurrentAuctionAveragePrice)] <- mean(car_buy_NA_rem_df$MMRCurrentAuctionAveragePrice, na.rm = TRUE)
+
+```
+
+
+```{r}
+length(car_buy_NA_rem_df$MMRAcquisitonRetailCleanPrice[is.na(car_buy_NA_rem_df$MMRAcquisitonRetailCleanPrice)])
+```
+
+#### 6. IMPUTING NAs for Numeric columns with MEAN of the column
+
+```{r}
+length(car_buy_NA_rem_df$MMRCurrentAuctionCleanPrice[is.na(car_buy_NA_rem_df$MMRCurrentAuctionCleanPrice)])
+```
+
+```{r}
+car_buy_NA_rem_df$MMRCurrentAuctionCleanPrice[is.na(car_buy_NA_rem_df$MMRCurrentAuctionCleanPrice)] <- mean(car_buy_NA_rem_df$MMRCurrentAuctionCleanPrice, na.rm = TRUE)
+```
+
+```{r}
+length(car_buy_NA_rem_df$MMRAcquisitonRetailCleanPrice[is.na(car_buy_NA_rem_df$MMRAcquisitonRetailCleanPrice)])
+```
+
+#### 7. IMPUTING NAs for Numeric columns with MEAN of the column
+
+```{r}
+length(car_buy_NA_rem_df$MMRCurrentRetailAveragePrice[is.na(car_buy_NA_rem_df$MMRCurrentRetailAveragePrice)])
+```
+
+```{r}
+car_buy_NA_rem_df$MMRCurrentRetailAveragePrice[is.na(car_buy_NA_rem_df$MMRCurrentRetailAveragePrice)] <- mean(car_buy_NA_rem_df$MMRCurrentRetailAveragePrice, na.rm = TRUE)
+```
+
+```{r}
+length(car_buy_NA_rem_df$MMRCurrentRetailAveragePrice[is.na(car_buy_NA_rem_df$MMRCurrentRetailAveragePrice)])
+```
+
+#### 8. IMPUTING NAs for Numeric columns with MEAN of the column
+
+```{r}
+length(car_buy_NA_rem_df$MMRCurrentRetailCleanPrice[is.na(car_buy_NA_rem_df$MMRCurrentRetailCleanPrice)])
+```
+
+```{r}
+car_buy_NA_rem_df$MMRCurrentRetailCleanPrice[is.na(car_buy_NA_rem_df$MMRCurrentRetailCleanPrice)] <- mean(car_buy_NA_rem_df$MMRCurrentRetailCleanPrice, na.rm = TRUE)
+```
+
+```{r}
+length(car_buy_NA_rem_df$MMRCurrentRetailCleanPrice[is.na(car_buy_NA_rem_df$MMRCurrentRetailCleanPrice)])
+```
+
+#### FINAL CLEANED DATAFRAME
+```{r}
+car_buy_clean_df <- car_buy_NA_rem_df
+car_buy_clean_df$VehBCostZ <- NULL
+car_buy_clean_df$VehicleAgeZ <- NULL
+car_buy_clean_df$VehOdoZ <- NULL
+car_buy_clean_df$WarrantyCostZ <- NULL
+```
+
+```{r}
+car_buy_clean_df$Make <- as.character(car_buy_clean_df$Make)
+car_buy_clean_df$Make <- as.factor(car_buy_clean_df$Make)
+
+car_buy_clean_df$Model <- as.character(car_buy_clean_df$Model)
+car_buy_clean_df$Model <- as.factor(car_buy_clean_df$Model)
+
+car_buy_clean_df$Trim <- as.character(car_buy_clean_df$Trim)
+car_buy_clean_df$Trim <- as.factor(car_buy_clean_df$Trim)
+
+car_buy_clean_df$SubModel <- as.character(car_buy_clean_df$SubModel)
+car_buy_clean_df$SubModel <- as.factor(car_buy_clean_df$SubModel)
+
+car_buy_clean_df$Color <- as.character(car_buy_clean_df$Color)
+car_buy_clean_df$Color <- as.factor(car_buy_clean_df$Color)
+
+car_buy_clean_df$Nationality <- as.character(car_buy_clean_df$Nationality)
+car_buy_clean_df$Nationality <- as.factor(car_buy_clean_df$Nationality)
+
+car_buy_clean_df$Size <- as.character(car_buy_clean_df$Size)
+car_buy_clean_df$Size <- as.factor(car_buy_clean_df$Size)
+
+car_buy_clean_df$TopThreeAmericanName <- as.character(car_buy_clean_df$TopThreeAmericanName)
+car_buy_clean_df$TopThreeAmericanName <- as.factor(car_buy_clean_df$TopThreeAmericanName)
+
+car_buy_clean_df$VNST <- as.character(car_buy_clean_df$VNST)
+car_buy_clean_df$VNST <- as.factor(car_buy_clean_df$VNST)
+```
+
+
+### Viewing Structure and Summary of final cleaned dataset
+```{r}
+str(car_buy_clean_df)
+summary(car_buy_clean_df)
+```
+
+
+```{r}
+#### Renaming columns
+colnames(car_buy_clean_df) <- c("IsBadBuy","Auction","VehicleAge","Make","Model","Trim","SubModel","Color","Transmission","WheelType","VehOdo","Nationality","Size","TopThreeAmericanName","MMRAcqAucAvgPrice","MMRAcqAucCleanPrice","MMRAcqRetailAvgPrice","MMRAcqRetailCleanPrice","MMRCurrAucAvgPrice","MMRCurrAucCleanPrice","MMRCurrRetailAvgPrice","MMRCurrRetailCleanPrice","VNST","VehBCost","IsOnlineSale","WarrantyCost")
+```
+
+```{r}
+str(car_buy_clean_df)
+```
+
+```{r}
+summary(car_buy_clean_df)
+```
+
+```{r}
+#testdf <- readRDS(file = "car_buy_clean_df.Rda")
+
+apply(is.na(car_buy_clean_df), 2, sum)
+```
+
+
+```{r}
+saveRDS(car_buy_clean_df,file="car_buy_clean_df.Rda")
+```
+
+
+```{r}
+write.csv(car_buy_clean_df,"car_buy_clean_df.csv",row.names = FALSE)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,41 @@
+---
+title: "Project Gradient Boosting"
+author: "IST 707 - Group 5"
+date: "2020 M04 16"
+output: html_document
+---
+
+#Import the Libraries
+```{r}
+library(caret)
+library(mlbench)
+library(MLmetrics)
+library(e1071)
+```
+
+#Import the Dataset
+```{r}
+gbm_train <- readRDS(file = "Balanced_TrainR.Rda")
+gbm_test <- readRDS(file = "Balanced_TestR.Rda")
+```
+
+#Train Model
+```{r}
+tuneGrid_gbm <- expand.grid(interaction.depth=c(5,6,7), n.trees = c(600,900),
+                            shrinkage=c(0.01), n.minobsinnode=c(10))
+
+trainControl_gbm <- trainControl(method="cv", number=3)
+
+set.seed(73)
+gbm_tuned <- train(IsBadBuy_1 ~ ., data = gbm_train,
+                   tuneGrid = expand.grid(tuneGrid_gbm), method = "gbm",
+                   trControl = trainControl_gbm, verbose=FALSE, metric="Accuracy")
+print(gbm_tuned)
+```
+
+#Predict and Evaluate
+```{r}
+gbm_tuned_predict <- predict(gbm_tuned, newdata = mod_test23)
+confusionMatrix(gbm_tuned_predict, mod_test23$IsBadBuy_1, positive = "1")
+```
+

@@ -1,0 +1,458 @@
+---
+title: "Exploratory Data Analysis"
+author: "Tejas Patil"
+date: "2020 M04 12"
+output: html_document
+---
+```{r}
+setwd("C:/Users/bhavi/OneDrive/Desktop/SYR ADS/Sem 2/IST_707_Data_Analytics/Project")
+
+```
+
+#### READING CLEANED DATA into DF
+```{r}
+car_buy_clean_df <- readRDS(file = "car_buy_clean_df.Rda")
+
+```
+
+
+```{r}
+library(ggplot2)
+```
+
+
+#### Bar graph for Plotting Target variable vs Nationality
+**</b> The % of Bad Buy's are equal amongst all the nationalities and hence Nationality may not be an important feature**
+```{r}
+ggplot(car_buy_clean_df, aes(IsBadBuy, group = Nationality)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent", fill = "IsBadBuy") +
+  facet_grid(~Nationality) + 
+  scale_y_continuous(labels = scales::percent)
+```
+
+#### Bar graph for Target variable vs Transmission
+**</b> Both AUTO & MANUAL Transmission have approximately equal proportion of Bad Buys**
+```{r}
+library(ggplot2)
+transmission_bad_buy_plot <- ggplot(car_buy_clean_df, aes(IsBadBuy, group = Transmission)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count",fill = "#FF6666") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent", fill = "IsBadBuy") + ggtitle("Transmission VS % of Bad Buys")+
+  facet_grid(~Transmission) + 
+  scale_y_continuous(labels = scales::percent)
+
+transmission_bad_buy_plot
+```
+
+
+```{r}
+car_count_by_transmission <- car_buy_clean_df %>%
+      group_by(Transmission,as.factor(IsBadBuy))%>%
+      summarise(n())
+colnames(car_count_by_transmission) <- c('Transmission','IsBadBuy','count_cars')
+
+transmission_bad_buy_plot <- ggplot(car_count_by_transmission,aes(fill = IsBadBuy,x=Transmission,y=count_cars))+geom_bar(position="stack",stat = "identity")+
+             xlab("Transmission")+ ylab("Number of cars sold")+ ggtitle("Transmission VS Number of Cars sold by Bad Buy categories")+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
+transmission_bad_buy_plot
+```
+
+
+#### Bar graph for Target variable vs Auction
+**</b> Auction ADESA has slightly higher % of bad buys**
+```{r}
+ggplot(car_buy_clean_df, aes(IsBadBuy, group = Auction)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent", fill = "IsBadBuy") +
+  facet_grid(~Auction) + 
+  scale_y_continuous(labels = scales::percent)
+```
+
+#### Bar graph for Target variable vs TopThreeAmericanNames
+**</b>The company Ford higher % of bad buys in comparison to other car companies**
+```{r}
+ggplot(car_buy_clean_df, aes(IsBadBuy, group = TopThreeAmericanName)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent", fill = "IsBadBuy") +
+  facet_grid(~TopThreeAmericanName) + 
+  scale_y_continuous(labels = scales::percent)
+```
+
+#### SIZE VS Proportion of Bad Buys
+**</br> Size does not play a significant role in determining whether car is a good buy or bad buy**
+```{r}
+#library(tidyverse)
+car_count_by_size <- car_buy_clean_df %>%
+      group_by(Size,as.factor(IsBadBuy))%>%
+      summarise(n())
+colnames(car_count_by_size) <- c('Size','IsBadBuy','count_cars')
+
+size_bad_buy_plot <- ggplot(car_count_by_size,aes(fill = IsBadBuy,x=Size,y=count_cars))+geom_bar(position="stack",stat = "identity")+
+             xlab("Sizes")+ ylab("Number of cars sold")+ ggtitle("Size VS proportion of Bad Buys")+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
+size_bad_buy_plot
+```
+
+#### The Wheel Type OTHER has a high proportion of Bad Buys
+```{r}
+
+library(tidyverse)
+car_count_by_WheelType <- car_buy_clean_df %>%
+      group_by(WheelType,as.factor(IsBadBuy))%>%
+      summarise(n())
+colnames(car_count_by_WheelType) <- c('WheelType','IsBadBuy','count_cars')
+
+WheelType_bad_buy_plot <- ggplot(car_count_by_WheelType,aes(fill = IsBadBuy,x=WheelType,y=count_cars))+geom_bar(position="stack",stat = "identity")+
+             xlab("Wheel Type")+ ylab("Number of cars sold")+ ggtitle("Wheel Type VS Number of Cars sold by Bad Buy categories")+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
+WheelType_bad_buy_plot
+
+```
+
+
+#### There is a high % of Bad Buys amongst "OTHER" wheel type
+```{r}
+library(ggplot2)
+ggplot(car_buy_clean_df, aes(IsBadBuy, group = WheelType)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent", fill = "IsBadBuy") +
+  facet_grid(~WheelType) + 
+  scale_y_continuous(labels = scales::percent)
+```
+
+
+#### There is not much significant difference in the % of bad buys amongst different makes
+```{r}
+car_count_by_make <- car_buy_clean_df %>%
+      group_by(Make,as.factor(IsBadBuy))%>%
+      summarise(n())
+colnames(car_count_by_make) <- c('Make','IsBadBuy','count_cars')
+
+make_bad_buy_plot <- ggplot(car_count_by_make,aes(fill = IsBadBuy,x=Make,y=count_cars))+geom_bar(position="stack",stat = "identity")+
+             xlab("Make")+ ylab("Number of cars sold")+ ggtitle("Make VS proportion of Bad Buys")+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
+make_bad_buy_plot
+
+```
+
+
+```{r}
+ggplot(data = car_buy_clean_df, mapping = aes(x = WheelType, y = as.integer
+                                      (car_buy_clean_df$IsBadBuy))) +
+  stat_summary(fun.y = "median", colour = "red", size = 5, geom = "point") +
+  stat_summary(fun.y = "mean", colour = "blue", size = 5, geom = "point") +
+  theme(axis.text.x=element_text(angle=90))
+
+```
+
+#### We can observe that Florida and Texas states have the highest number of car sales and hence highest proportion of Bad Buys
+```{r}
+car_count_by_VNST <- car_buy_clean_df %>%
+      group_by(VNST,as.factor(IsBadBuy))%>%
+      summarise(n())
+colnames(car_count_by_VNST) <- c('VNST','IsBadBuy','count_cars')
+
+VNST_bad_buy_plot <- ggplot(car_count_by_VNST,aes(fill = IsBadBuy,x=VNST,y=count_cars))+geom_bar(position="stack",stat = "identity")+
+             xlab("State")+ ylab("Number of cars sold")+ ggtitle("VNST VS Number of Cars sold by Bad Buy categories")+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
+VNST_bad_buy_plot
+```
+
+```{r}
+ggplot(data = car_buy_clean_df, mapping = aes(x = VNST, y = as.integer
+                                      (car_buy_clean_df$IsBadBuy))) +
+  stat_summary(fun.y = "median", colour = "red", size = 5, geom = "point") +
+  stat_summary(fun.y = "mean", colour = "blue", size = 5, geom = "point") +
+  theme(axis.text.x=element_text(angle=90))
+```
+
+
+#### Plotting Vehicle Age with Target Variable 
+**</b> The % of bad buy increases with vehicle age**
+```{r}
+car_count_by_VehicleAge <- car_buy_clean_df[car_buy_clean_df$VehicleAge != 0,]
+car_count_by_VehicleAge$VehicleAge <- as.factor(car_count_by_VehicleAge$VehicleAge)
+
+Agevsbadbuy<-ggplot(car_count_by_VehicleAge, aes(IsBadBuy, group = VehicleAge)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count",fill = "#FF6666") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent",fill = "IsBadBuy") + ggtitle("% of Bad Buy VS Vehicle Age")+
+  facet_grid(~VehicleAge) + 
+  scale_y_continuous(labels = scales::percent)
+Agevsbadbuy
+```
+
+#### Plotting Vehicle Odometer with Target Variable
+**</br> We can observe that % of Bad Buys increases with higher vehicle odometer reading groups**
+```{r}
+car_count_by_VehicleAge$VehOdoGroups <-cut(car_count_by_VehicleAge$VehOdo, breaks = c(quantile(car_count_by_VehicleAge$VehOdo, probs = c(0,0.25,0.5,0.75,1))),
+     labels = c(str_c(quantile(car_count_by_VehicleAge$VehOdo,probs = 0),quantile(car_count_by_VehicleAge$VehOdo,probs = 0.25),sep = " to "),str_c(quantile(car_count_by_VehicleAge$VehOdo,probs = 0.25),quantile(car_count_by_VehicleAge$VehOdo,probs = 0.5),sep = " to "),str_c(quantile(car_count_by_VehicleAge$VehOdo,probs = 0.5),quantile(car_count_by_VehicleAge$VehOdo,probs = 0.75),sep = " to "),str_c(quantile(car_count_by_VehicleAge$VehOdo,probs = 0.75),quantile(car_count_by_VehicleAge$VehOdo,probs = 1),sep = " to ")), right = FALSE, include.lowest=TRUE)
+car_count_by_VehicleAge$VehOdoGroups<-as.factor(car_count_by_VehicleAge$VehOdoGroups)
+
+
+Odovsbadbuy<-ggplot(car_count_by_VehicleAge, aes(IsBadBuy, group = VehOdoGroups)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count",fill = "#FF6666") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent",fill = "IsBadBuy") + ggtitle("% of Bad Buy VS Vehicle Odometer Reading groups")+
+  facet_grid(~VehOdoGroups) + 
+  scale_y_continuous(labels = scales::percent)
+Odovsbadbuy
+```
+
+#### Plotting VehBCost - Acquisition cost paid for the vehicle with Target Variable
+**</br> We can observe that % of Bad Buys is higher for lower Acquistion cost groups**
+```{r}
+car_count_by_VehicleAge$VehBCostGroups <-cut(car_count_by_VehicleAge$VehBCost, breaks = c(quantile(car_count_by_VehicleAge$VehBCost, probs = c(0,0.25,0.5,0.75,1))),
+     labels = c(str_c(quantile(car_count_by_VehicleAge$VehBCost,probs = 0),quantile(car_count_by_VehicleAge$VehBCost,probs = 0.25),sep = " to "),str_c(quantile(car_count_by_VehicleAge$VehBCost,probs = 0.25),quantile(car_count_by_VehicleAge$VehBCost,probs = 0.5),sep = " to "),str_c(quantile(car_count_by_VehicleAge$VehBCost,probs = 0.5),quantile(car_count_by_VehicleAge$VehBCost,probs = 0.75),sep = " to "),str_c(quantile(car_count_by_VehicleAge$VehBCost,probs = 0.75),quantile(car_count_by_VehicleAge$VehBCost,probs = 1),sep = " to ")), right = FALSE, include.lowest=TRUE)
+car_count_by_VehicleAge$VehBCostGroups<-as.factor(car_count_by_VehicleAge$VehBCostGroups)
+
+
+VehBCostvsbadbuy<-ggplot(car_count_by_VehicleAge, aes(IsBadBuy, group = VehBCostGroups)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count",fill = "#FF6666") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent",fill = "IsBadBuy") + ggtitle("% of Bad Buy VS Vehicle B Cost Reading groups")+
+  facet_grid(~VehBCostGroups) + 
+  scale_y_continuous(labels = scales::percent)
+VehBCostvsbadbuy
+```
+
+
+#### Plotting WarrantyCost with Target Variable
+**</br> We can observe that %(proportion) of Bad Buys increases for higher Warranty Costs**
+```{r}
+library(stringr)
+library(ggplot2)
+car_count_by_VehicleAge$WarrantyCostGroups <-cut(car_count_by_VehicleAge$WarrantyCost, breaks = c(quantile(car_count_by_VehicleAge$WarrantyCost, probs = c(0,0.25,0.5,0.75,1))),
+     labels = c(str_c(quantile(car_count_by_VehicleAge$WarrantyCost,probs = 0),quantile(car_count_by_VehicleAge$WarrantyCost,probs = 0.25),sep = " to "),str_c(quantile(car_count_by_VehicleAge$WarrantyCost,probs = 0.25),quantile(car_count_by_VehicleAge$WarrantyCost,probs = 0.5),sep = " to "),str_c(quantile(car_count_by_VehicleAge$WarrantyCost,probs = 0.5),quantile(car_count_by_VehicleAge$WarrantyCost,probs = 0.75),sep = " to "),str_c(quantile(car_count_by_VehicleAge$WarrantyCost,probs = 0.75),quantile(car_count_by_VehicleAge$WarrantyCost,probs = 1),sep = " to ")), right = FALSE, include.lowest=TRUE)
+car_count_by_VehicleAge$WarrantyCostGroups<-as.factor(car_count_by_VehicleAge$WarrantyCostGroups)
+
+
+WarrantyCostvsbadbuy<- ggplot(car_count_by_VehicleAge, aes(IsBadBuy, group = WarrantyCostGroups)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count",fill = "#FF6666") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent",fill = "IsBadBuy") + ggtitle("% of Bad Buy and Good Buy VS Warranty Cost ranges")+
+  facet_grid(~WarrantyCostGroups) + 
+  scale_y_continuous(labels = scales::percent)
+WarrantyCostvsbadbuy
+```
+
+
+```{r}
+ggplot(car_count_by_VehicleAge, aes(IsBadBuy, group = IsOnlineSale)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent",fill = "IsBadBuy") + ggtitle("% of Bad Buy VS Online/Offline Sales")+
+  facet_grid(~IsOnlineSale) + 
+  scale_y_continuous(labels = scales::percent)
+```
+
+#### 1. % Bad Buy is higher for lower acquistion Auction average prices
+**</br> The Proportion of Bad Buys is lower for higher acquisition average price groups**
+```{r}
+car_count_by_VehicleAge$MMRAcqAucAvgPriceGroups <-cut(car_count_by_VehicleAge$MMRAcqAucAvgPrice, breaks = c(quantile(car_count_by_VehicleAge$MMRAcqAucAvgPrice, probs = c(0,0.25,0.5,0.75,1))),
+     labels = c(str_c(quantile(car_count_by_VehicleAge$MMRAcqAucAvgPrice,probs = 0),quantile(car_count_by_VehicleAge$MMRAcqAucAvgPrice,probs = 0.25),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRAcqAucAvgPrice,probs = 0.25),quantile(car_count_by_VehicleAge$MMRAcqAucAvgPrice,probs = 0.5),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRAcqAucAvgPrice,probs = 0.5),quantile(car_count_by_VehicleAge$MMRAcqAucAvgPrice,probs = 0.75),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRAcqAucAvgPrice,probs = 0.75),quantile(car_count_by_VehicleAge$MMRAcqAucAvgPrice,probs = 1),sep = " to ")), right = FALSE, include.lowest=TRUE)
+car_count_by_VehicleAge$MMRAcqAucAvgPriceGroups<-as.factor(car_count_by_VehicleAge$MMRAcqAucAvgPriceGroups)
+
+
+acq_auc_avg_price <- ggplot(car_count_by_VehicleAge, aes(IsBadBuy, group = MMRAcqAucAvgPriceGroups)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count",fill = "#FF6666") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent",fill = "IsBadBuy") + ggtitle("% of Bad Buy VS MMRAcquisitionAuctionAveragePrice groups")+
+  facet_grid(~MMRAcqAucAvgPriceGroups) + 
+  scale_y_continuous(labels = scales::percent)
+acq_auc_avg_price
+```
+
+#### 2. Proportion of Bad Buy is lower for higher acquistion auction clean prices
+```{r}
+car_count_by_VehicleAge$MMRAcqAucCleanPriceGroups <-cut(car_count_by_VehicleAge$MMRAcqAucCleanPrice, breaks = c(quantile(car_count_by_VehicleAge$MMRAcqAucCleanPrice, probs = c(0,0.25,0.5,0.75,1))),
+     labels = c(str_c(quantile(car_count_by_VehicleAge$MMRAcqAucCleanPrice,probs = 0),quantile(car_count_by_VehicleAge$MMRAcqAucCleanPrice,probs = 0.25),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRAcqAucCleanPrice,probs = 0.25),quantile(car_count_by_VehicleAge$MMRAcqAucCleanPrice,probs = 0.5),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRAcqAucCleanPrice,probs = 0.5),quantile(car_count_by_VehicleAge$MMRAcqAucCleanPrice,probs = 0.75),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRAcqAucCleanPrice,probs = 0.75),quantile(car_count_by_VehicleAge$MMRAcqAucCleanPrice,probs = 1),sep = " to ")), right = FALSE, include.lowest=TRUE)
+car_count_by_VehicleAge$MMRAcqAucCleanPriceGroups<-as.factor(car_count_by_VehicleAge$MMRAcqAucCleanPriceGroups)
+
+
+acq_auc_clean_price<-ggplot(car_count_by_VehicleAge, aes(IsBadBuy, group = MMRAcqAucCleanPriceGroups)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count",fill = "#FF6666") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent",fill = "IsBadBuy") + ggtitle("% of Bad Buy VS MMRAcquisitionAuctionCleanPrice groups")+
+  facet_grid(~MMRAcqAucCleanPriceGroups) + 
+  scale_y_continuous(labels = scales::percent)
+acq_auc_clean_price
+```
+
+
+#### 3. No Concrete conclusion can be drawn for MMRAcqRetailAvgPriceGroups
+```{r}
+car_count_by_VehicleAge$MMRAcqRetailAvgPriceGroups <-cut(car_count_by_VehicleAge$MMRAcqRetailAvgPrice, breaks = c(quantile(car_count_by_VehicleAge$MMRAcqRetailAvgPrice, probs = c(0,0.25,0.5,0.75,1))),
+     labels = c(str_c(quantile(car_count_by_VehicleAge$MMRAcqRetailAvgPrice,probs = 0),quantile(car_count_by_VehicleAge$MMRAcqRetailAvgPrice,probs = 0.25),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRAcqRetailAvgPrice,probs = 0.25),quantile(car_count_by_VehicleAge$MMRAcqRetailAvgPrice,probs = 0.5),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRAcqRetailAvgPrice,probs = 0.5),quantile(car_count_by_VehicleAge$MMRAcqRetailAvgPrice,probs = 0.75),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRAcqRetailAvgPrice,probs = 0.75),quantile(car_count_by_VehicleAge$MMRAcqRetailAvgPrice,probs = 1),sep = " to ")), right = FALSE, include.lowest=TRUE)
+car_count_by_VehicleAge$MMRAcqRetailAvgPriceGroups<-as.factor(car_count_by_VehicleAge$MMRAcqRetailAvgPriceGroups)
+
+
+ggplot(car_count_by_VehicleAge, aes(IsBadBuy, group = MMRAcqRetailAvgPriceGroups)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent",fill = "IsBadBuy") + ggtitle("% of Bad Buy VS MMRAcquisitionRetailAveragePrice groups")+
+  facet_grid(~MMRAcqRetailAvgPriceGroups) + 
+  scale_y_continuous(labels = scales::percent)
+
+```
+
+
+#### 4. No Concrete conclusion can be drawn for MMRAcqRetailCleanPriceGroups
+```{r}
+car_count_by_VehicleAge$MMRAcqRetailCleanPriceGroups <-cut(car_count_by_VehicleAge$MMRAcqRetailCleanPrice, breaks = c(quantile(car_count_by_VehicleAge$MMRAcqRetailCleanPrice, probs = c(0,0.25,0.5,0.75,1))),
+     labels = c(str_c(quantile(car_count_by_VehicleAge$MMRAcqRetailCleanPrice,probs = 0),quantile(car_count_by_VehicleAge$MMRAcqRetailCleanPrice,probs = 0.25),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRAcqRetailCleanPrice,probs = 0.25),quantile(car_count_by_VehicleAge$MMRAcqRetailCleanPrice,probs = 0.5),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRAcqRetailCleanPrice,probs = 0.5),quantile(car_count_by_VehicleAge$MMRAcqRetailCleanPrice,probs = 0.75),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRAcqRetailCleanPrice,probs = 0.75),quantile(car_count_by_VehicleAge$MMRAcqRetailCleanPrice,probs = 1),sep = " to ")), right = FALSE, include.lowest=TRUE)
+car_count_by_VehicleAge$MMRAcqRetailAvgPriceGroups<-as.factor(car_count_by_VehicleAge$MMRAcqRetailAvgPriceGroups)
+
+
+ggplot(car_count_by_VehicleAge, aes(IsBadBuy, group = MMRAcqRetailCleanPriceGroups)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent",fill = "IsBadBuy") + ggtitle("% of Bad Buy VS MMRAcquisitionRetailCleanPrice groups")+
+  facet_grid(~MMRAcqRetailCleanPriceGroups) + 
+  scale_y_continuous(labels = scales::percent)
+
+```
+
+#### 5. Proportion of Bad Buy decreases with increase in Current Auction Average Price
+```{r}
+car_count_by_VehicleAge$MMRCurrAucAvgPriceGroups <-cut(car_count_by_VehicleAge$MMRCurrAucAvgPrice, breaks = c(quantile(car_count_by_VehicleAge$MMRCurrAucAvgPrice, probs = c(0,0.25,0.5,0.75,1))),
+     labels = c(str_c(quantile(car_count_by_VehicleAge$MMRCurrAucAvgPrice,probs = 0),quantile(car_count_by_VehicleAge$MMRCurrAucAvgPrice,probs = 0.25),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRCurrAucAvgPrice,probs = 0.25),quantile(car_count_by_VehicleAge$MMRCurrAucAvgPrice,probs = 0.5),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRCurrAucAvgPrice,probs = 0.5),quantile(car_count_by_VehicleAge$MMRCurrAucAvgPrice,probs = 0.75),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRCurrAucAvgPrice,probs = 0.75),quantile(car_count_by_VehicleAge$MMRCurrAucAvgPrice,probs = 1),sep = " to ")), right = FALSE, include.lowest=TRUE)
+car_count_by_VehicleAge$MMRCurrAucAvgPriceGroups<-as.factor(car_count_by_VehicleAge$MMRCurrAucAvgPriceGroups)
+
+
+current_auc_avg_price<-ggplot(car_count_by_VehicleAge, aes(IsBadBuy, group = MMRCurrAucAvgPriceGroups)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count",fill = "#FF6666") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent",fill = "IsBadBuy") + ggtitle("% of Bad Buy VS MMRCurrentAuctionAveragePrice groups")+
+  facet_grid(~MMRCurrAucAvgPriceGroups) + 
+  scale_y_continuous(labels = scales::percent)
+current_auc_avg_price
+```
+
+
+#### 6. Proportion of Bad Buy decreases with increase in Current Auction Clean Price
+```{r}
+car_count_by_VehicleAge$MMRCurrAucCleanPriceGroups <-cut(car_count_by_VehicleAge$MMRCurrAucCleanPrice, breaks = c(quantile(car_count_by_VehicleAge$MMRCurrAucCleanPrice, probs = c(0,0.25,0.5,0.75,1))),
+     labels = c(str_c(quantile(car_count_by_VehicleAge$MMRCurrAucCleanPrice,probs = 0),quantile(car_count_by_VehicleAge$MMRCurrAucCleanPrice,probs = 0.25),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRCurrAucCleanPrice,probs = 0.25),quantile(car_count_by_VehicleAge$MMRCurrAucCleanPrice,probs = 0.5),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRCurrAucCleanPrice,probs = 0.5),quantile(car_count_by_VehicleAge$MMRCurrAucCleanPrice,probs = 0.75),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRCurrAucCleanPrice,probs = 0.75),quantile(car_count_by_VehicleAge$MMRCurrAucCleanPrice,probs = 1),sep = " to ")), right = FALSE, include.lowest=TRUE)
+car_count_by_VehicleAge$MMRCurrAucCleanPriceGroups<-as.factor(car_count_by_VehicleAge$MMRCurrAucCleanPriceGroups)
+
+
+current_auc_clean_price<-ggplot(car_count_by_VehicleAge, aes(IsBadBuy, group = MMRCurrAucCleanPriceGroups)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count",fill = "#FF6666") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent",fill = "IsBadBuy") + ggtitle("% of Bad Buy VS MMRCurrAucCleanPriceGroups groups")+
+  facet_grid(~MMRCurrAucCleanPriceGroups) + 
+  scale_y_continuous(labels = scales::percent)
+current_auc_clean_price
+```
+
+
+#### 7.No concrete conclusion on Current Retail Avg Price
+```{r}
+car_count_by_VehicleAge$MMRCurrRetailAvgPriceGroups <-cut(car_count_by_VehicleAge$MMRCurrRetailAvgPrice, breaks = c(quantile(car_count_by_VehicleAge$MMRCurrRetailAvgPrice, probs = c(0,0.25,0.5,0.75,1))),
+     labels = c(str_c(quantile(car_count_by_VehicleAge$MMRCurrRetailAvgPrice,probs = 0),quantile(car_count_by_VehicleAge$MMRCurrRetailAvgPrice,probs = 0.25),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRCurrRetailAvgPrice,probs = 0.25),quantile(car_count_by_VehicleAge$MMRCurrRetailAvgPrice,probs = 0.5),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRCurrRetailAvgPrice,probs = 0.5),quantile(car_count_by_VehicleAge$MMRCurrRetailAvgPrice,probs = 0.75),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRCurrRetailAvgPrice,probs = 0.75),quantile(car_count_by_VehicleAge$MMRCurrRetailAvgPrice,probs = 1),sep = " to ")), right = FALSE, include.lowest=TRUE)
+car_count_by_VehicleAge$MMRCurrRetailAvgPriceGroups<-as.factor(car_count_by_VehicleAge$MMRCurrRetailAvgPriceGroups)
+
+
+ggplot(car_count_by_VehicleAge, aes(IsBadBuy, group = MMRCurrRetailAvgPriceGroups)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent",fill = "IsBadBuy") + ggtitle("% of Bad Buy VS MMRCurrRetailAvgPriceGroups groups")+
+  facet_grid(~MMRCurrRetailAvgPriceGroups) + 
+  scale_y_continuous(labels = scales::percent)
+
+```
+
+#### 8.No concrete conclusion on Current Retail Clean Price
+```{r}
+car_count_by_VehicleAge$MMRCurrRetailCleanPriceGroups <-cut(car_count_by_VehicleAge$MMRCurrRetailAvgPrice, breaks = c(quantile(car_count_by_VehicleAge$MMRCurrRetailCleanPrice, probs = c(0,0.25,0.5,0.75,1))),
+     labels = c(str_c(quantile(car_count_by_VehicleAge$MMRCurrRetailCleanPrice,probs = 0),quantile(car_count_by_VehicleAge$MMRCurrRetailCleanPrice,probs = 0.25),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRCurrRetailCleanPrice,probs = 0.25),quantile(car_count_by_VehicleAge$MMRCurrRetailCleanPrice,probs = 0.5),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRCurrRetailCleanPrice,probs = 0.5),quantile(car_count_by_VehicleAge$MMRCurrRetailCleanPrice,probs = 0.75),sep = " to "),str_c(quantile(car_count_by_VehicleAge$MMRCurrRetailCleanPrice,probs = 0.75),quantile(car_count_by_VehicleAge$MMRCurrRetailCleanPrice,probs = 1),sep = " to ")), right = FALSE, include.lowest=TRUE)
+car_count_by_VehicleAge$MMRCurrRetailCleanPriceGroups<-as.factor(car_count_by_VehicleAge$MMRCurrRetailCleanPriceGroups)
+
+
+ggplot(car_count_by_VehicleAge, aes(IsBadBuy, group = MMRCurrRetailCleanPriceGroups)) + 
+  geom_bar(aes(y = ..prop.., fill = IsBadBuy), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..),
+                y = ..prop..), stat = "count", vjust = -0.5) +
+  labs(y = "Percent",fill = "IsBadBuy") + ggtitle("% of Bad Buy VS MMRCurrRetailCleanPriceGroups groups")+
+  facet_grid(~MMRCurrRetailCleanPriceGroups) + 
+  scale_y_continuous(labels = scales::percent)
+
+```
+
+
+```{r}
+#Create data
+set.seed(1)
+Ixos=car_buy_clean_df$VehBCost[which(car_buy_clean_df$IsBadBuy == 0)]    
+Primadur=car_buy_clean_df$VehBCost[which(car_buy_clean_df$IsBadBuy == 1)] 
+
+#First distribution
+hist(Ixos, breaks=30, col=rgb(1,0,0,0.5), xlab="Vehicle Cost", 
+     ylab="nbr of vehicles", main="distribution of Vehicle Cost" )
+
+#Second with add=T to plot on top
+hist(Primadur, breaks=30, col=rgb(0,0,1,0.5), add=T)
+
+#Add legend
+legend("topright", legend=c("Not_Bad_buy","Bad_buy"), col=c(rgb(1,0,0,0.5), 
+     rgb(0,0,1,0.5)), pt.cex=2, pch=15 )
+```
+
+#### Correlation Matrix
+
+```{r}
+library(corrplot)
+
+num_df <- car_buy_clean_df[,sapply(car_buy_clean_df, is.numeric)]
+corMatrix <- cor(num_df)
+#View(descrCor)
+#print(descrCor)
+corrplot(corMatrix)
+
+
+corrplot(cor(num_df), method = "color", type = "upper")
+
+```
+
+
+
+```{r}
+#newtest_df <- car_data[which(car_data$VehOdo > 100000),]
+
+#Create data
+set.seed(1)
+Ixos=car_data$MMRCurrentRetailCleanPrice[which(car_data$IsBadBuy == 0)]    
+Primadur=car_data$MMRCurrentRetailCleanPrice[which(car_data$IsBadBuy == 1)] 
+
+#First distribution
+hist(Ixos, breaks=30, col=rgb(1,0,0,0.5), xlab="height", 
+     ylab="nbr of plants", main="distribution of height of 2 durum wheat varieties" )
+
+#Second with add=T to plot on top
+hist(Primadur, breaks=30, col=rgb(0,0,1,0.5), add=T)
+
+#Add legend
+legend("topright", legend=c("Ixos","Primadur"), col=c(rgb(1,0,0,0.5), 
+     rgb(0,0,1,0.5)), pt.cex=2, pch=15 )
+```
+
+
+

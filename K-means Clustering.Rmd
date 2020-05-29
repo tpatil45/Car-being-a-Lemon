@@ -1,0 +1,54 @@
+---
+title: "Project K-means Clustering"
+author: "IST 707 - Group 5"
+date: "2020 M04 16"
+output: html_document
+---
+
+#Load the necessary libraries
+```{r}
+library(factoextra)
+library(caret)
+library(mlbench)
+library(MLmetrics)
+library(e1071)
+```
+
+#Load the data
+```{r}
+car_pca_df <- readRDS(file = "car_pca_dfR.Rda")
+```
+
+#Remove target variable
+```{r}
+cluster_df <- car_pca_df[,-which(colnames(car_pca_df) == "Bad_Buy")]
+```
+
+#Search for best K
+```{r}
+set.seed(15)
+find_K <- function(K){
+  return(kmeans(cluster_df, K, nstart = 20)$tot.withinss)
+}
+k_val <- 1:8
+find_K_val <- purrr::map_dbl(k_val, find_K)
+```
+
+#Elbow Curve
+```{r}
+plot(x = k_val, y = find_K_val, 
+     type = "b", frame = F,
+     xlab = "Number of clusters K",
+     ylab = "Total within-clusters sum of squares")
+```
+
+#Model With best K
+```{r}
+kmeans_car <- kmeans(cluster_df, centers = 4, nstart = 20, iter.max = 100, algorithm = "Hartigan-Wong")
+```
+
+#Clusters 2D representation
+```{r}
+fviz_cluster(kmeans_car, data = cluster_df)
+```
+

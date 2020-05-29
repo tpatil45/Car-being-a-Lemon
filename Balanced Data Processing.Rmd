@@ -1,0 +1,224 @@
+---
+title: "Project Balanced Data Pre-Processing"
+author: "IST 707 - Group 5"
+date: "2020 M04 15"
+output: html_document
+---
+
+
+#Import necessary libraries
+```{r}
+library(dplyr)
+library(tidyverse)
+library(fastDummies)
+library(caret)
+library(DMwR)
+library(ggplot2)
+```
+
+#Import Dataset
+```{r}
+car_data <- readRDS(file = "car_buy_clean_df.Rda")
+
+str(car_data)
+```
+
+#Reducing number of categories (Grouping categories with count < 500)
+```{r}
+high_level <- c()
+for (i in 1:length(car_data)){
+  if (length(unique(car_data[,i])) > 20 & class(car_data[,i]) == "factor"){
+    high_level <- c(high_level, colnames(car_data)[i])
+  }
+}
+
+new_val_df <- function(var_bin){
+  df_val <- as.data.frame(table(var_bin))
+  df_val$var_bin <-  gsub(" ", "", df_val$var_bin, fixed = TRUE)
+  return_df <- df_val %>% count(var_bin = fct_collapse(var_bin, Other = var_bin[Freq < 500]),wt = Freq)
+  return(return_df)
+}
+model_val <- new_val_df(car_data$Model)
+submodel_val <- new_val_df(car_data$SubModel)
+trim_val <- new_val_df(car_data$Trim)
+make_val <- new_val_df(car_data$Make)
+states_val <- new_val_df(car_data$VNST)
+
+
+reduced_values <- function(variable, new_values){
+  variable <-  gsub(" ", "", variable, fixed = TRUE)
+  variable[-which(variable %in% new_values$var_bin)] <- "Other"
+  return(variable)
+}
+car_data$Model <- as.factor(reduced_values(car_data$Model, model_val))
+car_data$SubModel <- as.factor(reduced_values(car_data$SubModel, submodel_val))
+car_data$Trim <- as.factor(reduced_values(car_data$Trim, trim_val))
+car_data$Make <- as.factor(reduced_values(car_data$Make, make_val))
+car_data$VNST <- as.factor(reduced_values(car_data$VNST, states_val))
+```
+
+#Feature selection: Chi-Square Test
+```{r}
+cat_data <- car_data[,sapply(car_data, is.factor)]
+
+P_Value <- c()
+test_with <- c()
+Chi_Sco <- c()
+
+for (i in 1:length(cat_data)){
+  test <- chisq.test(cat_data$IsBadBuy, cat_data[,i])
+  P_Value <- c(P_Value, round(test$p.value, 3))
+  test_with <- c(test_with, paste0(colnames(car_data)[i]))
+  Chi_Sco <- c(Chi_Sco, round(test$statistic, 3))
+}
+chi_test <- data.frame(test_with, Chi_Sco, P_Value)
+#View(chi_test)
+```
+
+#Feature Selection: Logistic Regression
+```{r}
+lr_sum <- summary(glm(IsBadBuy ~. , data=car_data, family=binomial))
+lr_sum
+```
+
+#Delete Redundant Columns (Based on results from chi-square and glm summary)
+```{r}
+del_col1 <- which(colnames(car_data) == "Color")
+del_col2 <- which(colnames(car_data) == "TopThreeAmericanName")
+del_col3 <- which(colnames(car_data) == "SubModel")
+del_col4 <- which(colnames(car_data) == "Model")
+car_sel <- car_data[,-c(del_col1, del_col2, del_col3, del_col4)]
+```
+
+#One Hot Encoding
+```{r}
+dummies <- colnames(car_sel[,sapply(car_sel, is.factor)])
+car_dms <- dummy_cols(car_sel, select_columns = dummies)
+dummies_del <- c(dummies, "IsBadBuy_0", "Transmission_MANUAL", "IsOnlineSale_0")
+car_dms <- car_dms[,-which(names(car_dms) %in% dummies_del)]
+```
+
+#Split: Train-Test
+```{r}
+set.seed(9)
+train_index <- createDataPartition(car_dms$IsBadBuy_1, p = 0.85, list = FALSE)
+
+car_train <- car_dms[train_index, ]
+car_test <- car_dms[-train_index, ]
+```
+
+#Converting dummies to factors
+```{r}
+numer_var <- c("VehicleAge", "VehOdo", "MMRAcqAucAvgPrice", "MMRAcqAucCleanPrice", "MMRAcqRetailAvgPrice", "MMRAcqRetailCleanPrice", "MMRCurrAucAvgPrice", "MMRCurrAucCleanPrice", "MMRCurrRetailAvgPrice", "MMRCurrRetailCleanPrice", "VehBCost", "WarrantyCost")
+
+'%ni%' <- Negate('%in%')
+for (i in 1:length(car_train)){
+  if (colnames(car_train)[i] %ni% numer_var){
+    car_train[,i] <- as.factor(car_train[,i])
+  }
+}
+
+for (i in 1:length(car_test)){
+  if (colnames(car_test)[i] %ni% numer_var){
+    car_test[,i] <- as.factor(car_test[,i])
+  }
+}
+```
+
+#Saving Test data Before Scaling
+```{r}
+write.csv(car_test, file = "Test_Without_Scaling.csv", row.names = F)
+```
+
+#SMOTE: Undersampling (with negligible oversampling)
+```{r}
+set.seed(9)
+car_train_smt <- SMOTE(IsBadBuy_1~., car_train, perc.over = 1, perc.under = 10300)
+```
+
+#Standard Scaling the Data
+```{r}
+for(i in 1:length(colnames(car_train_smt))){
+  if(class(car_train_smt[,i]) == "numeric"){
+    car_train_smt[,i] <- as.vector(scale(car_train_smt[,i]))
+  }
+}
+
+for(i in 1:length(colnames(car_test))){
+  if(class(car_test[,i]) == "numeric"){
+    car_test[,i] <- as.vector(scale(car_test[,i]))
+  }
+}
+```
+
+#Saving the Data csv and R Data Files (This Data will be used for classification models)
+```{r}
+write.csv(car_train_smt, file = "Balanced_Train.csv", row.names = F)
+write.csv(car_test, file = "Balanced_Test.csv", row.names = F)
+
+saveRDS(car_train_smt,file="Balanced_TrainR.Rda")
+saveRDS(car_test,file="Balanced_TestR.Rda")
+```
+
+#Principal Component Analysis
+```{r}
+car_pca <- prcomp(car_dms[,-which(colnames(car_dms) == "IsBadBuy_1")], center = TRUE, scale = TRUE)
+
+cumpro <- cumsum(car_pca$sdev^2 / sum(car_pca$sdev^2))
+cumulative_pca <- ggplot()+ geom_point(aes(x = c(1:100), y = as.vector(cumpro[0:100])))
+cumulative_pca <- cumulative_pca + ggtitle("Cumulative variance plot")
+cumulative_pca <- cumulative_pca + xlab("Principal Components")
+cumulative_pca <- cumulative_pca + ylab("Amount of explained variance")
+cumulative_pca <- cumulative_pca + geom_vline(xintercept = 65)
+cumulative_pca <- cumulative_pca + geom_hline(yintercept = 0.9)
+cumulative_pca
+```
+
+#Selecting Principal Components
+```{r}
+car_pca_df <- as.data.frame((car_pca$x)[,c(1:65)])
+car_pca_df$Bad_Buy <- as.factor(car_dms$IsBadBuy_1)
+```
+
+#Normalizing Principal Components
+```{r}
+norm_ZN <- function(x){
+  y <- c()
+  y <- c(y, ((x) - min(x))/(max(x) - min(x)))
+  return(y)
+}
+for(i in 1:length(car_pca_df)){
+  if(class(car_pca_df[,i]) == "numeric"){
+    car_pca_df[,i] <- norm_ZN(car_pca_df[,i])
+  }
+}
+```
+
+#Saving the data csv and R data file (This Data will be used for clustering)
+```{r}
+write.csv(car_pca_df, file = "car_pca_df.csv", row.names = F)
+saveRDS(car_pca_df,file="car_pca_dfR.Rda")
+```
+
+#Bining numeric variables for ARM
+```{r}
+qaunt_cat <- function(x,y){ 
+  x[,y] <- cut(x[,y], breaks = quantile(x[,y], c(0,0.25,0.5,0.75,1)),
+               labels = paste0(colnames(x)[y], "-Q", 1:4))
+  x[which(is.na(x[,y])),y] <- paste(colnames(x)[y], sep = "-","Q1")
+  return(x[,y])
+}
+rules_df <- car_sel
+for(i in 1:length(rules_df)){
+  if(class(rules_df[,i]) == "numeric"){
+    rules_df[,i] <- qaunt_cat(rules_df,i)
+  }
+}
+rules_mat <- as(rules_df, "transactions")
+```
+
+#Saving the data csv and R data file (This Data will be used for apriori algorithm)
+```{r}
+write.csv(rules_df, file = "rules_df.csv", row.names = F)
+saveRDS(rules_mat,file="rules_mat.Rda")
+```
